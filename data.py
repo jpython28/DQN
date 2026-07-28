@@ -9,5 +9,7 @@ class ReplayBuffer(torch.utils.data.Dataset):
         self.buffer = deque([], self.max_exp)
     def __getitem__(self, idx):
         return self.buffer[idx]
-    def add_exp(self, obs, action, reward, next_obs, done):
-        self.buffer.append(tuple([torch.tensor(i) for i in (obs, action, reward, next_obs, done)]))
+    def __len__(self):
+        return len(self.buffer)
+    def add_exp(self, obs: torch.Tensor, action: torch.Tensor, reward: torch.Tensor, next_obs: torch.Tensor, done: torch.Tensor):
+        self.buffer.append((obs, action, reward, next_obs, done))
