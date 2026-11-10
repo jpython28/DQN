@@ -7,27 +7,25 @@ from data import ReplayBuffer
 from utils import as_tensor
 
 exploration = 1.0
-exploration_decay = 0.99
+exploration_decay = 0.98
 min_exploration = 0.01
 discount = 0.99
-lr = 0.0001
-max_experiences = 50_000
-min_experiences = 10_000
+lr = 0.001
+max_experiences = 1_000
+min_experiences = 500
 num_steps = 100_000
 batch_size = 32
 target_update_freq = 500
 log_freq = 1000
 replay_buffer = ReplayBuffer(max_experiences)
 explore_freq = 10
-exp_decay_freq = 500
+exp_decay_freq = 250
 
 network = DeepQNetwork()
 target_network = DeepQNetwork()
 
-envs = gym.make_vec("CartPole-v1", num_envs=batch_size, vectorization_mode="sync")
-
 optimizer = torch.optim.Adam(network.parameters(), lr)
-criterion = torch.nn.MSELoss()
+criterion = torch.nn.HuberLoss()
 
 def explore_run(exploration: float, render=False):
     was_training = network.training
@@ -63,12 +61,10 @@ while total_steps < num_steps:
         network.train()
         optimizer.zero_grad()
         obs, action, reward, next_obs, done = batch
-        if done.any():
-            print("BANG")
         output = network(obs)
         q = torch.gather(output, dim=1, index=action.unsqueeze(1)).squeeze(-1)
         with torch.no_grad():
-            y = reward + discount * torch.amax(network(next_obs), dim=-1) * (1-done.int())
+            y = reward + discount * torch.amax(target_network(next_obs), dim=-1) * (1-done.int())
         loss = criterion(q, y)
         losses.append(loss.item())
         loss.backward()

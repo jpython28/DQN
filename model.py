@@ -8,4 +8,4 @@ class DeepQNetwork(nn.Module):
         self.linear2 = nn.Linear(16, 8)
         self.linear3 = nn.Linear(8, 2)
     def forward(self, x):
-        return nn.functional.softmax(self.linear3(nn.functional.relu(self.linear2(nn.functional.relu(self.linear1(x))))), dim=-1)
+        return self.linear3(nn.functional.relu(self.linear2(nn.functional.relu(self.linear1(x)))))
